@@ -62,6 +62,54 @@ tablePos processClick(Vector2f pos)
     return tablePos(pos.x / CELL_SIZE, pos.y / CELL_SIZE);
 }
 
+int getNumByKey(Keyboard::Key key)
+{
+    if (key == Keyboard::Num1 || key == Keyboard::Numpad1)
+        return 1;
+    if (key == Keyboard::Num2 || key == Keyboard::Numpad2)
+        return 2;
+    if (key == Keyboard::Num3 || key == Keyboard::Numpad3)
+        return 3;
+    if (key == Keyboard::Num4 || key == Keyboard::Numpad4)
+        return 4;
+    if (key == Keyboard::Num5 || key == Keyboard::Numpad5)
+        return 5;
+    if (key == Keyboard::Num6 || key == Keyboard::Numpad6)
+        return 6;
+    if (key == Keyboard::Num7 || key == Keyboard::Numpad7)
+        return 7;
+    if (key == Keyboard::Num8 || key == Keyboard::Numpad8)
+        return 8;
+    if (key == Keyboard::Num9 || key == Keyboard::Numpad9)
+        return 9;
+    return -1;
+}
+
+tablePos getPosByKey(Keyboard::Key key)
+{
+    tablePos pressedPos(0, 0);
+    if (key == Keyboard::Left)
+        pressedPos.x--;
+    if (key == Keyboard::Right)
+        pressedPos.x++;
+    if (key == Keyboard::Up)
+        pressedPos.y--;
+    if (key == Keyboard::Down)
+        pressedPos.y++;
+    return pressedPos;
+}
+
+void processNumClick(int num, tablePos pos, int var[9][9], int table[9][9])
+{
+    if (pos.x == -1)
+        return;
+    if (var[pos.y][pos.x] != 0)
+        return;
+    table[pos.y][pos.x] = num;
+}
+const Color backgroundColor(188, 152, 126);
+const Color choosenColor(144, 238, 144);
+
 int main()
 {
     RenderWindow window(VideoMode(9 * CELL_SIZE + 2.3 * FIELD_BORDER, 9 * CELL_SIZE + 2.3 * FIELD_BORDER + DOWN_SIZE), 
@@ -97,6 +145,7 @@ int main()
     };
 
     tablePos choosenPos = tablePos(-1, -1);
+    tablePos pressedPos(0, 0);
 
     while (window.isOpen())
     {
@@ -107,16 +156,47 @@ int main()
                 window.close();
             if (event.type == Event::MouseButtonReleased)
             {
-                choosenPos = processClick(Vector2f(event.mouseButton.x, event.mouseButton.y));
+                pressedPos = processClick(Vector2f(event.mouseButton.x, event.mouseButton.y));
+                if (pressedPos.x == choosenPos.x && pressedPos.y == choosenPos.y)
+                    choosenPos = tablePos(-1, -1);
+                else
+                    choosenPos = pressedPos;
+            }
+            if (event.type == Event::KeyPressed)
+            {
+                pressedPos = getPosByKey(event.key.code);
+                if (pressedPos.x != 0 || pressedPos.y != 0)
+                {
+                    if (choosenPos.x == -1)
+                    {
+                        if (pressedPos.y == 1)
+                            choosenPos = tablePos(0, 8);
+                        else if (pressedPos.x == 1)
+                            choosenPos = tablePos(8, 0);
+                        else
+                            choosenPos = tablePos(0, 0);
+                    }
+                    else
+                    {
+                        choosenPos.x = min(max(choosenPos.x + pressedPos.x, 0), 8);
+                        choosenPos.y = min(max(choosenPos.y + pressedPos.y, 0), 8);
+                    }
+                }
+                else
+                {
+                    int pressedNum = getNumByKey(event.key.code);
+                    if (pressedNum != -1)
+                        processNumClick(pressedNum, choosenPos, var_1, table);
+                }
             }
         }
         
-        window.clear(Color(188, 152, 126, 255));
+        window.clear(backgroundColor);
         if (choosenPos.x != -1)
         {
             RectangleShape rect(Vector2f(CELL_SIZE, CELL_SIZE));
             rect.setPosition(Vector2f(choosenPos.x * CELL_SIZE + FIELD_BORDER, choosenPos.y * CELL_SIZE + FIELD_BORDER));
-            rect.setFillColor(Color(144, 238, 144));
+            rect.setFillColor(choosenColor);
             window.draw(rect);
         }
         drawTable(&window);
