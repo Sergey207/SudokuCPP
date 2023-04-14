@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+
 #include "check.h"
 
 using namespace sf;
@@ -46,6 +47,23 @@ struct tablePos {
     int y;
 };
 
+vector<tablePos> pos_wrong(int sudoku[9][9], int num)
+{
+    vector<tablePos> pos;
+    int i, j;
+    for (i = 0; i < 9; i++)
+    {
+        for (j = 0; j < 9; j++)
+        {
+            if (sudoku[i][j] == num)
+            {
+                pos.push_back(tablePos(i, j));
+            }
+        }
+    }
+    return pos;
+}
+
 void drawTable(RenderWindow* window)
 {
     for (int i = 0; i <= 9; i++)
@@ -80,6 +98,17 @@ void drawNums(RenderWindow* window, Font* regular_font, Font* bold_font, int var
             }
         }
     }
+}
+
+void drawWin(RenderWindow* window, Font* font)
+{
+    Text text;
+    text.setCharacterSize(20);
+    text.setFillColor(Color::Black);
+    text.setFont(*font);
+    text.setString("You win!\nPress Any key to restart");
+    text.setPosition(FIELD_BORDER, CELL_SIZE * 10);
+    (*window).draw(text);
 }
 
 tablePos processClick(Vector2f pos)
@@ -123,6 +152,7 @@ void processNumClick(int num, tablePos pos, int var[9][9], int table[9][9])
 }
 const Color backgroundColor(188, 152, 126);
 const Color choosenColor(144, 238, 144);
+const Color errorColor(200, 0, 0, 150);
 
 int main()
 {
@@ -145,21 +175,32 @@ int main()
       { 0, 0, 5, 9, 0, 4, 0, 0, 7 },
       { 0, 0, 4, 0, 0, 0, 2, 0, 9 }
     };
-
-    int table[9][9] = {
-      { 0, 0, 0, 0, 0, 8, 0, 0, 1 },
-      { 0, 0, 8, 0, 4, 0, 0, 0, 0 },
-      { 0, 0, 3, 0, 9, 1, 8, 4, 2 },
-      { 0, 3, 1, 0, 0, 0, 0, 0, 0 },
-      { 6, 0, 0, 7, 5, 0, 0, 0, 0 },
-      { 0, 2, 0, 3, 0, 6, 0, 9, 5 },
-      { 0, 6, 2, 8, 0, 0, 0, 0, 4 },
-      { 0, 0, 5, 9, 0, 4, 0, 0, 7 },
-      { 0, 0, 4, 0, 0, 0, 2, 0, 9 }
+    int var_2[9][9] = {
+     { 5, 7, 0, 0, 0, 0, 4, 0, 0 },
+     { 0, 0, 0, 2, 4, 0, 7, 8, 0 },
+     { 4, 0, 2, 7, 0, 6, 0, 0, 0 },
+     { 0, 0, 5, 0, 0, 0, 0, 3, 1 },
+     { 0, 0, 3, 0, 0, 0, 0, 0, 0 },
+     { 8, 2, 4, 3, 5, 1, 0, 0, 0 },
+     { 0, 4, 7, 0, 9, 3, 1, 0, 0 },
+     { 3, 0, 0, 4, 0, 8, 0, 5, 0 },
+     { 0, 0, 0, 6, 0, 0, 3, 0, 0 }
     };
+    int var[9][9];
+    int table[9][9];
+        for (int i = 0; i < 9; i++)
+    {
+        for (int j = 0; j < 9; j++)
+        {
+            var[i][j] = var_1[i][j];
+            table[i][j] = var_1[i][j];
+        }
+    }
 
     tablePos choosenPos = tablePos(-1, -1);
     tablePos pressedPos(0, 0);
+    bool win = false;
+    vector<tablePos> errors;
 
     while (window.isOpen())
     {
@@ -178,6 +219,18 @@ int main()
             }
             if (event.type == Event::KeyPressed)
             {
+                if (win)
+                {
+                    win = false;
+                    for (int i = 0; i < 9; i++)
+                    {
+                        for (int j = 0; j < 9; j++)
+                        {
+                            table[i][j] = var_2[i][j];
+                            var[i][j] = var_2[i][j];
+                        }
+                    }
+                }
                 pressedPos = getPosByKey(event.key.code);
                 if (pressedPos.x != 0 || pressedPos.y != 0)
                 {
@@ -200,11 +253,18 @@ int main()
                 {
                     int pressedNum = getNumByKey(event.key.code);
                     if (pressedNum != -1)
-                        processNumClick(pressedNum, choosenPos, var_1, table);
+                    {
+                        processNumClick(pressedNum, choosenPos, var, table);
+                        if (!now_check(table))
+                            errors = pos_wrong(table, pressedNum);
+                        else
+                            errors.clear();
+                        win = final_check(table);
+                    }
                 }
             }
         }
-        
+
         window.clear(backgroundColor);
         if (choosenPos.x != -1)
         {
@@ -213,8 +273,18 @@ int main()
             rect.setFillColor(choosenColor);
             window.draw(rect);
         }
+        for (auto error : errors)
+        {
+            RectangleShape rect(Vector2f(CELL_SIZE, CELL_SIZE));
+            rect.setPosition(Vector2f(error.y * CELL_SIZE + FIELD_BORDER, error.x * CELL_SIZE + FIELD_BORDER));
+            rect.setFillColor(errorColor);
+            window.draw(rect);
+        }
         drawTable(&window);
-        drawNums(&window, &regular_font, &bold_font, var_1, table);
+        drawNums(&window, &regular_font, &bold_font, var, table);
+        if (win)
+            drawWin(&window, &bold_font);
+
         window.display();
     }      
     return 0;
