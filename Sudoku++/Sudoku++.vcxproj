@@ -131,7 +131,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="check.cpp" />
     <ClCompile Include="Sudoku++.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="check.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

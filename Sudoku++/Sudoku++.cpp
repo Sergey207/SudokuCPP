@@ -1,5 +1,8 @@
 ﻿#include <SFML/Graphics.hpp>
+
 #include <string>
+#include <vector>
+#include "check.h"
 
 using namespace sf;
 using namespace std;
@@ -8,6 +11,30 @@ using namespace std;
 #define LINE_WIDTH 3
 #define FIELD_BORDER 20
 #define DOWN_SIZE 100
+
+const vector<Keyboard::Key> nums = {
+    Keyboard::Num1,
+    Keyboard::Num2,
+    Keyboard::Num3,
+    Keyboard::Num4,
+    Keyboard::Num5,
+    Keyboard::Num6,
+    Keyboard::Num7,
+    Keyboard::Num8,
+    Keyboard::Num9
+};
+
+const vector<Keyboard::Key> keyboardNums = {
+    Keyboard::Numpad1,
+    Keyboard::Numpad2,
+    Keyboard::Numpad3,
+    Keyboard::Numpad4,
+    Keyboard::Numpad5,
+    Keyboard::Numpad6,
+    Keyboard::Numpad7,
+    Keyboard::Numpad8,
+    Keyboard::Numpad9
+};
 
 struct tablePos {
     tablePos(int x, int y)
@@ -64,24 +91,11 @@ tablePos processClick(Vector2f pos)
 
 int getNumByKey(Keyboard::Key key)
 {
-    if (key == Keyboard::Num1 || key == Keyboard::Numpad1)
-        return 1;
-    if (key == Keyboard::Num2 || key == Keyboard::Numpad2)
-        return 2;
-    if (key == Keyboard::Num3 || key == Keyboard::Numpad3)
-        return 3;
-    if (key == Keyboard::Num4 || key == Keyboard::Numpad4)
-        return 4;
-    if (key == Keyboard::Num5 || key == Keyboard::Numpad5)
-        return 5;
-    if (key == Keyboard::Num6 || key == Keyboard::Numpad6)
-        return 6;
-    if (key == Keyboard::Num7 || key == Keyboard::Numpad7)
-        return 7;
-    if (key == Keyboard::Num8 || key == Keyboard::Numpad8)
-        return 8;
-    if (key == Keyboard::Num9 || key == Keyboard::Numpad9)
-        return 9;
+    for (int i = 0; i < 9; i++)
+    {
+        if (nums[i] == key || keyboardNums[i] == key)
+            return (i + 1);
+    }
     return -1;
 }
 
