@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "check.h"
+#include "field.h"
 
 using namespace sf;
 using namespace std;
@@ -80,7 +81,7 @@ void drawTable(RenderWindow* window)
 	}
 }
 
-void drawNums(RenderWindow* window, Font* regular_font, Font* bold_font, int var[9][9], int table[9][9])
+void drawNums(RenderWindow* window, Font* regular_font, Font* bold_font, sudoku* var, sudoku table)
 {
 	Text text;
 	text.setFillColor(Color::Black);
@@ -91,7 +92,7 @@ void drawNums(RenderWindow* window, Font* regular_font, Font* bold_font, int var
 		{
 			if (table[i][j])
 			{
-				text.setFont((var[i][j] == 0) ? *regular_font : *bold_font);
+				text.setFont(((*var)[i][j] == 0) ? *regular_font : *bold_font);
 				text.setString(to_string(table[i][j]));
 				text.setPosition(Vector2f(j * CELL_SIZE + FIELD_BORDER * 1.6, i * CELL_SIZE + FIELD_BORDER));
 				(*window).draw(text);
@@ -163,38 +164,13 @@ int main()
 	Font regular_font, bold_font;
 	if (!regular_font.loadFromFile("Disket-Mono-Regular.ttf") || !bold_font.loadFromFile("Disket-Mono-Bold.ttf"))
 		return 0;
-
-	int var_1[9][9] = {
-	  { 0, 0, 0, 0, 0, 8, 0, 0, 1 },
-	  { 0, 0, 8, 0, 4, 0, 0, 0, 0 },
-	  { 0, 0, 3, 0, 9, 1, 0, 4, 2 },
-	  { 0, 3, 1, 0, 0, 0, 0, 0, 0 },
-	  { 6, 0, 0, 7, 5, 0, 0, 0, 0 },
-	  { 0, 2, 0, 3, 0, 6, 0, 9, 5 },
-	  { 0, 6, 2, 8, 0, 0, 0, 0, 4 },
-	  { 0, 0, 5, 9, 0, 4, 0, 0, 7 },
-	  { 0, 0, 4, 0, 0, 0, 2, 0, 9 }
-	};
-	int var_2[9][9] = {
-	 { 5, 7, 0, 0, 0, 0, 4, 0, 0 },
-	 { 0, 0, 0, 2, 4, 0, 7, 8, 0 },
-	 { 4, 0, 2, 7, 0, 6, 0, 0, 0 },
-	 { 0, 0, 5, 0, 0, 0, 0, 3, 1 },
-	 { 0, 0, 3, 0, 0, 0, 0, 0, 0 },
-	 { 8, 2, 4, 3, 5, 1, 0, 0, 0 },
-	 { 0, 4, 7, 0, 9, 3, 1, 0, 0 },
-	 { 3, 0, 0, 4, 0, 8, 0, 5, 0 },
-	 { 0, 0, 0, 6, 0, 0, 3, 0, 0 }
-	};
-	int var[9][9];
-	int table[9][9];
+	int var_now = 0;
+	sudoku* var = getSudoku(var_now);
+	sudoku table;
 	for (int i = 0; i < 9; i++)
 	{
 		for (int j = 0; j < 9; j++)
-		{
-			var[i][j] = var_1[i][j];
-			table[i][j] = var_1[i][j];
-		}
+			table[i][j] = (*var)[i][j];
 	}
 
 	tablePos choosenPos = tablePos(-1, -1);
@@ -212,7 +188,9 @@ int main()
 			if (event.type == Event::MouseButtonReleased)
 			{
 				pressedPos = processClick(Vector2f(event.mouseButton.x, event.mouseButton.y));
-				if (pressedPos.x == choosenPos.x && pressedPos.y == choosenPos.y)
+				if ((pressedPos.x == choosenPos.x && pressedPos.y == choosenPos.y)
+					|| (pressedPos.x < 0 || pressedPos.x > 8)
+					|| (pressedPos.y < 0 || pressedPos.y > 8))
 					choosenPos = tablePos(-1, -1);
 				else
 					choosenPos = pressedPos;
@@ -222,13 +200,13 @@ int main()
 				if (win)
 				{
 					win = false;
+					var_now = (var_now >= 5) ? 0 : (var_now + 1);
+
+					var = getSudoku(var_now);
 					for (int i = 0; i < 9; i++)
 					{
 						for (int j = 0; j < 9; j++)
-						{
-							table[i][j] = var_2[i][j];
-							var[i][j] = var_2[i][j];
-						}
+							table[i][j] = (*var)[i][j];
 					}
 				}
 				else
@@ -256,7 +234,7 @@ int main()
 						int pressedNum = getNumByKey(event.key.code);
 						if (pressedNum != -1)
 						{
-							processNumClick(pressedNum, choosenPos, var, table);
+							processNumClick(pressedNum, choosenPos, *var, table);
 							if (!now_check(table))
 								errors = pos_wrong(table, pressedNum);
 							else
@@ -265,14 +243,14 @@ int main()
 						else if (event.key.code == Keyboard::BackSpace)
 						{
 							if (choosenPos.x != -1 && var[choosenPos.y][choosenPos.x] == 0)
-							{	
+							{
 								errors.clear();
 								table[choosenPos.y][choosenPos.x] = 0;
 							}
 						}
 					}
 				}
-			win = final_check(table);
+				win = final_check(table);
 			}
 		}
 
