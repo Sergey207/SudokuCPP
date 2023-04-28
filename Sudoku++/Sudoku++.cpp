@@ -107,7 +107,7 @@ void drawWin(RenderWindow* window, Font* font)
 	text.setCharacterSize(20);
 	text.setFillColor(Color::Black);
 	text.setFont(*font);
-	text.setString("You win!\nPress Any key to restart");
+	text.setString("You win!\nPress Any key to go to next level");
 	text.setPosition(FIELD_BORDER, CELL_SIZE * 10);
 	(*window).draw(text);
 }
